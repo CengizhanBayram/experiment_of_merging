@@ -91,6 +91,20 @@ def run_mergekit(config_path: str, output_path: str, strategy: str):
             return False
 
         print(f"\n✅ Merge tamamlandı: {output_path}")
+
+        # TIES/DARE: base model tokenizer'ı bozuk olabilir,
+        # primary model'den tokenizer'ı tekrar kopyala
+        if strategy in ("ties", "dare"):
+            print(f"  🔄 Tokenizer düzeltiliyor (primary model'den kopyalanıyor)...")
+            try:
+                primary_model = "ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1"
+                tok = AutoTokenizer.from_pretrained(primary_model, trust_remote_code=True)
+                tok.save_pretrained(output_path)
+                print(f"  ✅ Tokenizer güncellendi: {primary_model}")
+            except Exception as tok_err:
+                print(f"  ⚠️  Tokenizer kopyalama hatası: {tok_err}")
+                print(f"  ℹ️  Model ağırlıkları yine de doğru olabilir.")
+
         return True
 
     except FileNotFoundError:
