@@ -2,13 +2,13 @@
 """
 check_tokenizers.py
 ───────────────────
-Üç Türkçe LLM modelinin tokenizer'larını karşılaştırır.
+Türkçe LLM modellerinin tokenizer'larını karşılaştırır.
 vocab_size, special_tokens ve padding_side kontrolü yapar.
 Her model çifti için merge edilebilirlik durumunu döndürür.
 
 Kullanım:
     python check_tokenizers.py
-    python check_tokenizers.py --models model1 model2 model3
+    python check_tokenizers.py --models model1 model2
 """
 
 import argparse
@@ -25,11 +25,10 @@ except ImportError:
     sys.exit(1)
 
 
-# Varsayılan modeller
+# Varsayılan modeller (Mistral-7b-tr HF'den kaldırıldı)
 DEFAULT_MODELS = [
     "ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1",
     "Trendyol/Trendyol-LLM-8b-chat-v2.0",
-    "malhajar/Mistral-7b-tr",
 ]
 
 
@@ -57,6 +56,7 @@ def get_tokenizer_info(tokenizer, model_name: str) -> dict:
     return {
         "model": model_name,
         "vocab_size": tokenizer.vocab_size,
+        "full_vocab_size": len(tokenizer),
         "padding_side": getattr(tokenizer, "padding_side", "N/A"),
         "special_tokens": special_tokens,
         "tokenizer_class": tokenizer.__class__.__name__,
@@ -66,34 +66,43 @@ def get_tokenizer_info(tokenizer, model_name: str) -> dict:
 
 def check_compatibility(info_a: dict, info_b: dict) -> dict:
     """İki tokenizer arasındaki uyumu kontrol eder."""
-    issues = []
+    issues = []      # Gerçek blocker'lar
+    warnings = []    # Merge'i engellemez ama dikkat edilmeli
 
-    # Vocab size kontrolü
-    vocab_diff = abs(info_a["vocab_size"] - info_b["vocab_size"])
-    vocab_match = info_a["vocab_size"] == info_b["vocab_size"]
+    # ── Gerçek blocker: vocab size farkı ──
+    vocab_diff = abs(info_a["full_vocab_size"] - info_b["full_vocab_size"])
+    vocab_match = info_a["full_vocab_size"] == info_b["full_vocab_size"]
     if not vocab_match:
         issues.append(
-            f"Vocab boyutu farklı: {info_a['model']}={info_a['vocab_size']}, "
-            f"{info_b['model']}={info_b['vocab_size']} (fark: {vocab_diff})"
+            f"❌ Vocab boyutu farklı: {info_a['model'].split('/')[-1]}={info_a['full_vocab_size']}, "
+            f"{info_b['model'].split('/')[-1]}={info_b['full_vocab_size']} (fark: {vocab_diff}) — merge edilemez"
         )
 
-    # Tokenizer sınıfı kontrolü
+    # ── Gerçek blocker: tokenizer sınıfı farkı ──
     class_match = info_a["tokenizer_class"] == info_b["tokenizer_class"]
     if not class_match:
         issues.append(
-            f"Tokenizer sınıfı farklı: {info_a['model']}={info_a['tokenizer_class']}, "
-            f"{info_b['model']}={info_b['tokenizer_class']}"
+            f"❌ Tokenizer sınıfı farklı: {info_a['model'].split('/')[-1]}={info_a['tokenizer_class']}, "
+            f"{info_b['model'].split('/')[-1]}={info_b['tokenizer_class']}"
         )
 
-    # BOS/EOS token kontrolü
-    for token_name in ["bos_token", "eos_token"]:
-        tok_a = info_a["special_tokens"].get(token_name)
-        tok_b = info_b["special_tokens"].get(token_name)
-        if tok_a != tok_b:
-            issues.append(
-                f"{token_name} farklı: {info_a['model']}='{tok_a}', "
-                f"{info_b['model']}='{tok_b}'"
-            )
+    # ── Uyarı (blocker değil): eos_token farkı ──
+    eos_a = info_a["special_tokens"].get("eos_token")
+    eos_b = info_b["special_tokens"].get("eos_token")
+    if eos_a != eos_b:
+        warnings.append(
+            f"⚠️  eos_token farklı: '{eos_a}' vs '{eos_b}' "
+            f"(merge'i engellemez, chat template farkı)"
+        )
+
+    # ── Uyarı (blocker değil): bos_token farkı ──
+    bos_a = info_a["special_tokens"].get("bos_token")
+    bos_b = info_b["special_tokens"].get("bos_token")
+    if bos_a != bos_b:
+        warnings.append(
+            f"⚠️  bos_token farklı: '{bos_a}' vs '{bos_b}' "
+            f"(merge'i engellemez)"
+        )
 
     compatible = len(issues) == 0
     return {
@@ -103,6 +112,7 @@ def check_compatibility(info_a: dict, info_b: dict) -> dict:
         "vocab_match": vocab_match,
         "class_match": class_match,
         "issues": issues,
+        "warnings": warnings,
     }
 
 
@@ -117,7 +127,6 @@ def suggest_exclusion(compatibility_results: list, model_infos: list):
     if not incompatible_models:
         return None
 
-    # En çok uyumsuzluğa sahip modeli öner
     worst_model = max(incompatible_models, key=incompatible_models.get)
     return worst_model
 
@@ -130,7 +139,7 @@ def main():
         "--models",
         nargs="+",
         default=DEFAULT_MODELS,
-        help="Kontrol edilecek model isimleri (varsayılan: 3 Türkçe model)",
+        help="Kontrol edilecek model isimleri (varsayılan: 2 Türkçe model)",
     )
     args = parser.parse_args()
 
@@ -175,14 +184,14 @@ def main():
         table_data.append([
             short_name,
             info["vocab_size"],
+            info["full_vocab_size"],
             info["tokenizer_class"],
             info["padding_side"],
-            info["model_max_length"],
             special_str,
         ])
 
-    headers = ["Model", "Vocab Size", "Tokenizer Sınıfı", "Padding",
-               "Max Length", "Özel Tokenler"]
+    headers = ["Model", "Vocab Size", "Full Vocab", "Tokenizer Sınıfı",
+               "Padding", "Özel Tokenler"]
     print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
     # ── 3) Çift çift uyumluluk kontrolü ─────────────────────────
@@ -197,12 +206,15 @@ def main():
 
         short_a = info_a["model"].split("/")[-1]
         short_b = info_b["model"].split("/")[-1]
-        status = "✅ Uyumlu" if result["compatible"] else "❌ Uyumsuz"
+        status = "✅ Uyumlu (merge edilebilir)" if result["compatible"] else "❌ Uyumsuz"
 
         print(f"\n  {short_a}  ↔  {short_b}:  {status}")
         if result["issues"]:
             for issue in result["issues"]:
-                print(f"    ⚠️  {issue}")
+                print(f"    {issue}")
+        if result["warnings"]:
+            for warning in result["warnings"]:
+                print(f"    {warning}")
 
     # ── 4) Merge edilebilirlik özeti ─────────────────────────────
     print("\n" + "─" * 70)
@@ -213,14 +225,15 @@ def main():
     for result in compatibility_results:
         short_a = result["model_a"].split("/")[-1]
         short_b = result["model_b"].split("/")[-1]
+        all_notes = result["issues"] + result["warnings"]
         merge_table.append([
             f"{short_a} + {short_b}",
             "✅ True" if result["compatible"] else "❌ False",
-            "; ".join(result["issues"]) if result["issues"] else "—",
+            "; ".join(all_notes) if all_notes else "—",
         ])
 
     print(tabulate(merge_table,
-                   headers=["Model Çifti", "Merge Edilebilir?", "Sorunlar"],
+                   headers=["Model Çifti", "Merge Edilebilir?", "Notlar"],
                    tablefmt="grid"))
 
     # ── 5) Çıkarma önerisi ───────────────────────────────────────
@@ -229,15 +242,22 @@ def main():
         short_exc = exclusion.split("/")[-1]
         print(f"\n⚠️  ÖNERİ: '{short_exc}' modeli en çok uyumsuzluğa sahip.")
         print(f"   Bu modeli merge'den çıkarmayı düşünebilirsiniz.")
-        print(f"   (Tam ad: {exclusion})")
     else:
-        print("\n✅ Tüm modeller birbiriyle uyumlu görünüyor!")
+        print("\n✅ Tüm modeller birbiriyle uyumlu! Merge işlemine devam edilebilir.")
+
+    # Uyarı varsa bilgilendir
+    all_warnings = []
+    for result in compatibility_results:
+        all_warnings.extend(result["warnings"])
+    if all_warnings:
+        print(f"\nℹ️  {len(all_warnings)} uyarı var (bunlar merge'i engellemez):")
+        for w in all_warnings:
+            print(f"   {w}")
 
     print("\n" + "=" * 70)
     print("✅ Kontrol tamamlandı.")
     print("=" * 70)
 
-    # Sonuç kodu
     has_incompatible = any(not r["compatible"] for r in compatibility_results)
     return 1 if has_incompatible else 0
 

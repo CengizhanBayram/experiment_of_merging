@@ -1,7 +1,8 @@
-# DARE Merge Configuration
-# Merges three Turkish LLM models using DARE-TIES strategy
+# DARE Merge Configuration (2-way)
+# Merges two Turkish LLM models using DARE-TIES strategy
 # (Drop And REscale with TIES sign election)
 # Output: Cosmobillian/TR-Llama-8B-3way_DARE_v1
+# Not: malhajar/Mistral-7b-tr HF'den kaldırıldığı için 2 modelle çalışır
 
 merge_method: dare_ties
 dtype: bfloat16
@@ -13,15 +14,11 @@ base_model: meta-llama/Meta-Llama-3-8B
 models:
   - model: ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1
     parameters:
-      weight: 0.4
+      weight: 0.6
       density: 0.5
   - model: Trendyol/Trendyol-LLM-8b-chat-v2.0
     parameters:
-      weight: 0.35
-      density: 0.5
-  - model: malhajar/Mistral-7b-tr
-    parameters:
-      weight: 0.25
+      weight: 0.4
       density: 0.5
 
 parameters:
@@ -37,16 +34,12 @@ parameters:
 # Yüksek density (daha muhafazakar):
 #   density: 0.7
 #
-# Alternatif ağırlıklar ile düşük density:
+# Eşit ağırlıklar:
 #   - model: ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1
 #     parameters:
 #       weight: 0.5
-#       density: 0.3
+#       density: 0.5
 #   - model: Trendyol/Trendyol-LLM-8b-chat-v2.0
 #     parameters:
-#       weight: 0.3
-#       density: 0.3
-#   - model: malhajar/Mistral-7b-tr
-#     parameters:
-#       weight: 0.2
-#       density: 0.3
+#       weight: 0.5
+#       density: 0.5

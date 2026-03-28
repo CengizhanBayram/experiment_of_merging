@@ -34,8 +34,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 STRATEGY_PARAMS = {
     "SLERP": "t=0.5, dtype=bfloat16",
-    "TIES": "weights=[0.5, 0.3, 0.2], density=0.7, normalize=true, dtype=bfloat16",
-    "DARE": "weights=[0.4, 0.35, 0.25], density=0.5, normalize=true, dtype=bfloat16",
+    "TIES": "weights=[0.6, 0.4], density=0.7, normalize=true, dtype=bfloat16",
+    "DARE": "weights=[0.6, 0.4], density=0.5, normalize=true, dtype=bfloat16",
 }
 
 MODEL_CARD_TEMPLATE = """---

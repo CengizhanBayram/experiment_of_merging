@@ -1,6 +1,7 @@
-# TIES Merge Configuration
-# Merges three Turkish LLM models using TIES (TrIm, Elect, Sum) strategy
+# TIES Merge Configuration (2-way)
+# Merges two Turkish LLM models using TIES (TrIm, Elect, Sum) strategy
 # Output: Cosmobillian/TR-Llama-8B-3way_TIES_v1
+# Not: malhajar/Mistral-7b-tr HF'den kaldırıldığı için 2 modelle çalışır
 
 merge_method: ties
 dtype: bfloat16
@@ -12,15 +13,11 @@ base_model: meta-llama/Meta-Llama-3-8B
 models:
   - model: ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1
     parameters:
-      weight: 0.5
+      weight: 0.6
       density: 0.7
   - model: Trendyol/Trendyol-LLM-8b-chat-v2.0
     parameters:
-      weight: 0.3
-      density: 0.7
-  - model: malhajar/Mistral-7b-tr
-    parameters:
-      weight: 0.2
+      weight: 0.4
       density: 0.7
 
 parameters:
@@ -33,27 +30,19 @@ parameters:
 # Eşit ağırlıklı:
 #   - model: ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1
 #     parameters:
-#       weight: 0.33
+#       weight: 0.5
 #       density: 0.7
 #   - model: Trendyol/Trendyol-LLM-8b-chat-v2.0
 #     parameters:
-#       weight: 0.33
-#       density: 0.7
-#   - model: malhajar/Mistral-7b-tr
-#     parameters:
-#       weight: 0.33
+#       weight: 0.5
 #       density: 0.7
 #
-# Dengeli dağılım:
+# Model A ağırlıklı:
 #   - model: ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1
 #     parameters:
-#       weight: 0.4
+#       weight: 0.7
 #       density: 0.7
 #   - model: Trendyol/Trendyol-LLM-8b-chat-v2.0
 #     parameters:
-#       weight: 0.4
-#       density: 0.7
-#   - model: malhajar/Mistral-7b-tr
-#     parameters:
-#       weight: 0.2
+#       weight: 0.3
 #       density: 0.7
