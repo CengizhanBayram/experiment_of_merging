@@ -1,0 +1,25 @@
+{
+  "timestamp": null,
+  "models": {
+    "slerp": {
+      "perplexity": null,
+      "manual_score": null,
+      "responses": {}
+    },
+    "ties": {
+      "perplexity": null,
+      "manual_score": null,
+      "responses": {}
+    },
+    "dare": {
+      "perplexity": null,
+      "manual_score": null,
+      "responses": {}
+    },
+    "baseline": {
+      "perplexity": null,
+      "manual_score": null,
+      "responses": {}
+    }
+  }
+}

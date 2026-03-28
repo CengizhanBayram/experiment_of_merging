@@ -1,0 +1,41 @@
+# SLERP Merge Configuration
+# Merges two Turkish LLM models using Spherical Linear Interpolation
+# Output: Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_SLERP_v1
+
+merge_method: slerp
+dtype: bfloat16
+
+# SLERP only supports 2 models
+slices:
+  - sources:
+      - model: ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1
+        layer_range: [0, 32]
+      - model: Trendyol/Trendyol-LLM-8b-chat-v2.0
+        layer_range: [0, 32]
+
+parameters:
+  t:
+    - filter: self_attn
+      value: 0.5
+    - filter: mlp
+      value: 0.5
+    - value: 0.5  # fallback for other parameters
+
+# ──────────────────────────────────────────────
+# Alternatif t değerleri (yorum satırı olarak):
+# ──────────────────────────────────────────────
+# Model A'ya daha yakın (Türkçe ağırlıklı):
+#   t:
+#     - filter: self_attn
+#       value: 0.3
+#     - filter: mlp
+#       value: 0.3
+#     - value: 0.3
+#
+# Model B'ye daha yakın (Trendyol ağırlıklı):
+#   t:
+#     - filter: self_attn
+#       value: 0.7
+#     - filter: mlp
+#       value: 0.7
+#     - value: 0.7
