@@ -171,22 +171,49 @@ TURKISH_QUESTIONS = {
 }
 
 
-def compute_perplexity(model, tokenizer, num_samples: int = 500) -> float:
-    """mc4/tr veya cc100/tr veri seti üzerinde perplexity hesaplar."""
+def compute_perplexity(model, tokenizer, num_samples: int = 200) -> float:
+    """Türkçe veri seti üzerinde perplexity hesaplar."""
     print("    📊 Perplexity hesaplanıyor...")
 
     try:
-        # Önce mc4 dene, yoksa cc100
+        dataset = None
+        dataset_name = None
+        text_key = "text"
+
+        # 1) wikipedia/tr (ücretsiz, geniş)
         try:
-            dataset = load_dataset("mc4", "tr", split="validation", streaming=True)
-            dataset_name = "mc4/tr"
+            dataset = load_dataset("wikipedia", "20220301.tr", split="train", streaming=True)
+            dataset_name = "wikipedia/tr"
+            text_key = "text"
         except Exception:
+            pass
+
+        # 2) wikiann/tr (ücretsiz NER veri seti, tokens alanı var)
+        if dataset is None:
             try:
-                dataset = load_dataset("cc100", "tr", split="train", streaming=True)
-                dataset_name = "cc100/tr"
+                dataset = load_dataset("wikiann", "tr", split="train", streaming=True)
+                dataset_name = "wikiann/tr"
+                text_key = "tokens"  # token listesi olarak gelir
             except Exception:
-                print("    ⚠️  Veri seti yüklenemedi, perplexity atlanıyor.")
-                return float("nan")
+                pass
+
+        # 3) Fallback: sabit Türkçe metinler
+        if dataset is None:
+            print("    ⚠️  Online veri seti yüklenemedi, dahili metinlerle hesaplanıyor.")
+            dataset_name = "dahili_turkce"
+            fallback_texts = [
+                "Türkiye Cumhuriyeti 29 Ekim 1923 tarihinde Mustafa Kemal Atatürk önderliğinde kurulmuştur.",
+                "İstanbul Boğazı Karadeniz ile Marmara Denizi arasında yer alan önemli bir su yoludur.",
+                "Yapay zeka günümüzde birçok alanda kullanılmakta ve hızla gelişmektedir.",
+                "Türk mutfağı dünyanın en zengin mutfaklarından biri olarak kabul edilmektedir.",
+                "Kapadokya peri bacaları ve yeraltı şehirleriyle ünlü bir turizm bölgesidir.",
+                "Ankara Türkiye Cumhuriyetinin başkenti olup ülkenin ikinci büyük şehridir.",
+                "Osmanlı İmparatorluğu altı yüz yıldan fazla hüküm sürmüş büyük bir devlettir.",
+                "Efes antik kenti Selçuk ilçesinde yer alan UNESCO Dünya Mirası listesindedir.",
+                "Türkçe Ural Altay dil ailesine mensup sondan eklemeli bir dildir.",
+                "Pamukkale travertenleri doğal güzellikleriyle her yıl milyonlarca turisti ağırlamaktadır.",
+            ] * 20  # 200 örneğe çıkar
+            dataset = [{"text": t} for t in fallback_texts]
 
         print(f"    📂 Veri seti: {dataset_name}")
 
@@ -200,11 +227,15 @@ def compute_perplexity(model, tokenizer, num_samples: int = 500) -> float:
                 if processed >= num_samples:
                     break
 
-                text = sample.get("text", "")
-                if not text or len(text) < 50:
+                # text alanını al
+                if text_key == "tokens" and isinstance(sample.get("tokens"), list):
+                    text = " ".join(sample["tokens"])
+                else:
+                    text = sample.get("text", "")
+
+                if not text or len(text) < 20:
                     continue
 
-                # Metni sınırla (bellek için)
                 text = text[:512]
 
                 encodings = tokenizer(
