@@ -45,13 +45,15 @@ except ImportError:
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = PROJECT_ROOT / "results" / "benchmark_results.json"
 
-BASELINE_MODEL = "ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1"
+BASELINE_MODEL_A = "ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1"
+BASELINE_MODEL_B = "Trendyol/Trendyol-LLM-8b-chat-v2.0"
 
 MODEL_PATHS = {
     "slerp": "./merged_models/slerp",
     "ties": "./merged_models/ties",
     "dare": "./merged_models/dare",
-    "baseline": BASELINE_MODEL,
+    "baseline_a": BASELINE_MODEL_A,
+    "baseline_b": BASELINE_MODEL_B,
 }
 
 # ── 20 Türkçe Soru Seti ──────────────────────────────────────────
@@ -395,7 +397,8 @@ def print_summary_table(results: dict):
         "slerp": "SLERP",
         "ties": "TIES",
         "dare": "DARE",
-        "baseline": "Baseline",
+        "baseline_a": "Baseline A (Turkish-Llama)",
+        "baseline_b": "Baseline B (Trendyol)",
     }
 
     # En iyi perplexity ve skorları bul
@@ -412,7 +415,7 @@ def print_summary_table(results: dict):
     best_perplexity = min(valid_perplexities, key=valid_perplexities.get) if valid_perplexities else None
     best_score = max(valid_scores, key=valid_scores.get) if valid_scores else None
 
-    for key in ["slerp", "ties", "dare", "baseline"]:
+    for key in ["slerp", "ties", "dare", "baseline_a", "baseline_b"]:
         if key not in results:
             continue
 
@@ -489,7 +492,7 @@ def main():
         print(f"{'='*70}")
 
         for key, path in MODEL_PATHS.items():
-            if key != "baseline" and not Path(path).exists():
+            if not key.startswith("baseline") and not Path(path).exists():
                 print(f"\n⚠️  {key} modeli bulunamadı: {path} → Atlanıyor.")
                 continue
             results[key] = evaluate_model(path, key)
