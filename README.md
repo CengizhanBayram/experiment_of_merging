@@ -185,7 +185,7 @@ Bu proje MIT lisansı ile lisanslanmıştır. Merge edilen modeller kendi lisans
 
 ## 📬 İletişim
 
-- **Linkedln:** [Cengizhan Batran](https://www.linkedin.com/in/cengizhan-bayram)
+- **Linkedln:** [Cengizhan Bayram](https://www.linkedin.com/in/cengizhan-bayram)
 - **HuggingFace:** [Cosmobillian](https://huggingface.co/Cosmobillian)
 
 ---
