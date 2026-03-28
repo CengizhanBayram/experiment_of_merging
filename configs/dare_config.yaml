@@ -2,14 +2,13 @@
 # Merges two Turkish LLM models using DARE-TIES strategy
 # (Drop And REscale with TIES sign election)
 # Output: Cosmobillian/TR-Llama-8B-3way_DARE_v1
-# Not: malhajar/Mistral-7b-tr HF'den kaldırıldığı için 2 modelle çalışır
 
 merge_method: dare_ties
 dtype: bfloat16
 normalize: true
 
-# Base model for computing task vectors
-base_model: meta-llama/Meta-Llama-3-8B
+# Base model - ungated mirror (orijinal meta-llama/Meta-Llama-3-8B gated)
+base_model: NousResearch/Meta-Llama-3-8B
 
 models:
   - model: ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1
@@ -26,20 +25,7 @@ parameters:
   int8_mask: true
 
 # ──────────────────────────────────────────────
-# Alternatif density değerleri (yorum satırı olarak):
+# Alternatif density degerleri (yorum satırı):
 # ──────────────────────────────────────────────
-# Düşük density (daha agresif drop):
-#   density: 0.3
-#
-# Yüksek density (daha muhafazakar):
-#   density: 0.7
-#
-# Eşit ağırlıklar:
-#   - model: ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1
-#     parameters:
-#       weight: 0.5
-#       density: 0.5
-#   - model: Trendyol/Trendyol-LLM-8b-chat-v2.0
-#     parameters:
-#       weight: 0.5
-#       density: 0.5
+# Dusuk density (agresif drop): 0.3
+# Yuksek density (muhafazakar): 0.7
