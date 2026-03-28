@@ -23,22 +23,22 @@ Türkçe açık kaynak LLM modellerini **SLERP**, **TIES** ve **DARE** merge str
 
 ### Google Colab (Önerilen)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Cosmobillian/turkish-llm-merging/blob/main/colab_full_pipeline.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CengizhanBayram/experiment_of_merging/blob/main/colab_full_pipeline.ipynb)
 
 `colab_full_pipeline.ipynb` dosyasını açın ve **"Run All"** yapın. T4 GPU yeterlidir.
 
 ### Yerel Kurulum
 
 ```bash
-git clone https://github.com/Cosmobillian/turkish-llm-merging.git
-cd turkish-llm-merging
+git clone https://github.com/CengizhanBayram/experiment_of_merging.git
+cd experiment_of_merging
 pip install -r requirements.txt
 ```
 
 ## 📁 Dosya Yapısı
 
 ```
-turkish-llm-merging/
+experiment_of_merging/
 ├── README.md                      # Bu dosya
 ├── requirements.txt               # Python bağımlılıkları
 ├── configs/
@@ -191,4 +191,4 @@ Bu proje MIT lisansı ile lisanslanmıştır. Merge edilen modeller kendi lisans
 ---
 
 > Merged from Turkish open-source LLMs using SLERP, TIES, and DARE strategies.
-> Benchmarks and methodology: [github.com/Cosmobillian/turkish-llm-merging](https://github.com/Cosmobillian/turkish-llm-merging)
+> Benchmarks and methodology: [github.com/CengizhanBayram/experiment_of_merging](https://github.com/CengizhanBayram/experiment_of_merging)

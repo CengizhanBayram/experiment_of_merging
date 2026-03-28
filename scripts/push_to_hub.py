@@ -85,12 +85,12 @@ print(tokenizer.decode(outputs[0]))
 
 ## Metodoloji ve Kaynak Kod
 
-📂 [github.com/Cosmobillian/turkish-llm-merging](https://github.com/Cosmobillian/turkish-llm-merging)
+📂 [github.com/CengizhanBayram/experiment_of_merging](https://github.com/CengizhanBayram/experiment_of_merging)
 
 ---
 
 > Merged from [{source_models_str}] using {strategy} strategy.
-> Benchmarks and methodology: github.com/Cosmobillian/turkish-llm-merging
+> Benchmarks and methodology: github.com/CengizhanBayram/experiment_of_merging
 """
 
 
