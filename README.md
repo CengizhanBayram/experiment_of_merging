@@ -2,22 +2,63 @@
 
 Türkçe açık kaynak LLM modellerini **SLERP**, **TIES** ve **DARE** merge stratejileriyle birleştirme, benchmark ile karşılaştırma ve HuggingFace'de paylaşma projesi.
 
-## 📋 Proje Özeti
+Hiç eğitim yapılmadı. Sıfır GPU maliyeti. Sadece ağırlık aritmetiği.
 
-| Strateji | Çıktı Model | Kaynak Modeller |
-|----------|-------------|-----------------|
-| **SLERP** | [Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_SLERP_v1](https://huggingface.co/Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_SLERP_v1) | Model A + Model B |
-| **TIES** | [Cosmobillian/TR-Llama-8B-3way_TIES_v1](https://huggingface.co/Cosmobillian/TR-Llama-8B-3way_TIES_v1) | Model A + B + C |
-| **DARE** | [Cosmobillian/TR-Llama-8B-3way_DARE_v1](https://huggingface.co/Cosmobillian/TR-Llama-8B-3way_DARE_v1) | Model A + B + C |
+---
 
-### Kullanılan Modeller
+## 🤗 HuggingFace Modeller
 
-| Kısaltma | Model | Açıklama |
-|----------|-------|----------|
-| Model A (primary) | `ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1` | Türkçe instruction-tuned Llama |
-| Model B (secondary) | `Trendyol/Trendyol-LLM-8b-chat-v2.0` | Trendyol Türkçe chat modeli |
-| Model C (tertiary) | `malhajar/Mistral-7b-tr` | Türkçe Mistral (sadece TIES/DARE) |
-| Base | `meta-llama/Meta-Llama-3-8B` | Base model (TIES/DARE task vector hesabı için) |
+| Strateji | Model |
+|----------|-------|
+| SLERP | [Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_SLERP_v1](https://huggingface.co/Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_SLERP_v1) |
+| TIES  | [Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_TIES_v1](https://huggingface.co/Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_TIES_v1) |
+| DARE  | [Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_DARE_v1](https://huggingface.co/Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_DARE_v1) |
+
+---
+
+## 📊 Benchmark Sonuçları
+
+| Model | Strateji | Perplexity ↓ | Manuel /20 |
+|-------|----------|:------------:|:----------:|
+| TR-Llama-8B-Cosmos-Trendyol_SLERP_v1 | SLERP | **39.31** ✅ | 20/20 |
+| TR-Llama-8B-Cosmos-Trendyol_TIES_v1  | TIES  | 45.18 | 18/20 |
+| TR-Llama-8B-Cosmos-Trendyol_DARE_v1  | DARE  | 72.10 ❌ | 14/20 |
+| Baseline — Turkish-Llama-8B (YTÜ Cosmos) | — | 57.35 | 18/20 |
+| Baseline — Trendyol-LLM-8B | — | 39.87 | 19/20 |
+
+**SLERP her iki kaynak modeli de geride bıraktı.**
+DARE ise density=0.5 ile çok agresif davrandı — Türkçe anlama kapasitesi belirgin biçimde düştü.
+
+> Manuel skor 20 sorudan oluşmaktadır: 5 genel bilgi, 5 matematik, 5 gramer, 5 instruction following. Keyword-matching ile hesaplanmıştır.
+
+---
+
+## 🧠 Kullanılan Modeller
+
+| Model | Açıklama |
+|-------|----------|
+| `ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1` | Türkçe instruction-tuned Llama (Model A) |
+| `Trendyol/Trendyol-LLM-8b-chat-v2.0` | Trendyol Türkçe chat modeli (Model B) |
+
+> Üçüncü bir model (Mistral-7B-tr) planlanmıştı ancak tokenizer uyumsuzluğu nedeniyle merge dışında kaldı.
+
+---
+
+## 🔀 Merge Stratejileri
+
+### SLERP — Spherical Linear Interpolation
+İki modeli küresel interpolasyonla harmanlıyor. `t=0.5` ile eşit ağırlık.
+En temiz ve tutarlı yöntem.
+
+### TIES — TrIm, Elect, Sum
+Çakışan ağırlıkları "trim" ederek gürültüyü azaltıyor.
+`weights=[0.5, 0.3, 0.2]`, `density=0.7`
+
+### DARE — Drop And REscale
+Ağırlıkların bir kısmını silerek daha seyrek bir model elde ediyor.
+`weights=[0.4, 0.35, 0.25]`, `density=0.5`
+
+---
 
 ## 🚀 Hızlı Başlangıç
 
@@ -25,7 +66,7 @@ Türkçe açık kaynak LLM modellerini **SLERP**, **TIES** ve **DARE** merge str
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/CengizhanBayram/experiment_of_merging/blob/main/colab_full_pipeline.ipynb)
 
-`colab_full_pipeline.ipynb` dosyasını açın ve **"Run All"** yapın. T4 GPU yeterlidir.
+`colab_full_pipeline.ipynb` dosyasını açın ve **Run All** yapın. T4 GPU yeterlidir.
 
 ### Yerel Kurulum
 
@@ -35,160 +76,73 @@ cd experiment_of_merging
 pip install -r requirements.txt
 ```
 
+---
+
 ## 📁 Dosya Yapısı
 
 ```
 experiment_of_merging/
-├── README.md                      # Bu dosya
-├── requirements.txt               # Python bağımlılıkları
+├── README.md
+├── requirements.txt
 ├── configs/
-│   ├── slerp_config.yaml          # SLERP merge yapılandırması
-│   ├── ties_config.yaml           # TIES merge yapılandırması
-│   └── dare_config.yaml           # DARE merge yapılandırması
+│   ├── slerp_config.yaml
+│   ├── ties_config.yaml
+│   └── dare_config.yaml
 ├── scripts/
 │   ├── check_tokenizers.py        # Tokenizer uyumluluk kontrolü
 │   ├── run_merge.py               # Merge çalıştırıcı
 │   ├── benchmark.py               # Benchmark değerlendirme
 │   └── push_to_hub.py             # HuggingFace'e yükleme
 ├── results/
-│   └── benchmark_results.json     # Benchmark sonuçları
-└── colab_full_pipeline.ipynb      # Tek notebook, tüm adımları içerir
+│   └── benchmark_results.json
+└── colab_full_pipeline.ipynb
 ```
+
+---
 
 ## 🛠️ Kullanım
 
-### 1. Tokenizer Kontrolü
-
 ```bash
+# Tokenizer kontrolü
 python scripts/check_tokenizers.py
-```
 
-Üç modelin tokenizer'larını karşılaştırır: vocab_size, special_tokens, padding_side. Uyumsuz çiftleri tespit eder ve hangi modelin çıkarılması gerektiğini önerir.
-
-### 2. Merge Çalıştırma
-
-```bash
-# SLERP merge (2 model)
+# Merge
 python scripts/run_merge.py --strategy slerp
-
-# TIES merge (3 model)
 python scripts/run_merge.py --strategy ties
-
-# DARE merge (3 model)
 python scripts/run_merge.py --strategy dare
 
-# Özel config ile
-python scripts/run_merge.py --strategy slerp --config ./my_config.yaml
-
-# Özel çıktı dizini
-python scripts/run_merge.py --strategy ties --output ./my_model
-```
-
-Her merge sonrası 3 Türkçe test cümlesi üretilerek sanity check yapılır.
-
-### 3. Benchmark
-
-```bash
-# Tüm modelleri değerlendir
+# Benchmark (tüm modeller)
 python scripts/benchmark.py --model all
 
-# Tek model
-python scripts/benchmark.py --model ./merged_models/slerp
-
-# Özel çıktı dosyası
-python scripts/benchmark.py --model all --output results/my_results.json
-```
-
-**Ölçülen metrikler:**
-- **Türkçe Perplexity** — mc4/tr veri seti üzerinde (ilk 500 örnek)
-- **Manuel Skor (20 soru):**
-  - 5 genel bilgi (Türkiye tarihi, coğrafya)
-  - 5 matematik
-  - 5 gramer / Türk dili
-  - 5 instruction following
-
-### 4. HuggingFace'e Yükleme
-
-```bash
-# SLERP modelini yükle
+# HuggingFace'e push
 python scripts/push_to_hub.py \
     --model_path ./merged_models/slerp \
     --repo_id Cosmobillian/TR-Llama-8B-Cosmos-Trendyol_SLERP_v1 \
     --strategy SLERP \
     --source_models "ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1,Trendyol/Trendyol-LLM-8b-chat-v2.0"
-
-# TIES modelini yükle
-python scripts/push_to_hub.py \
-    --model_path ./merged_models/ties \
-    --repo_id Cosmobillian/TR-Llama-8B-3way_TIES_v1 \
-    --strategy TIES \
-    --source_models "ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1,Trendyol/Trendyol-LLM-8b-chat-v2.0,malhajar/Mistral-7b-tr"
-
-# DARE modelini yükle
-python scripts/push_to_hub.py \
-    --model_path ./merged_models/dare \
-    --repo_id Cosmobillian/TR-Llama-8B-3way_DARE_v1 \
-    --strategy DARE \
-    --source_models "ytu-ce-cosmos/Turkish-Llama-8b-Instruct-v0.1,Trendyol/Trendyol-LLM-8b-chat-v2.0,malhajar/Mistral-7b-tr"
 ```
 
 `HF_TOKEN` ortam değişkeni gereklidir.
 
-## 🔀 Merge Stratejileri
-
-### SLERP (Spherical Linear Interpolation)
-- **2 model** arasında küresel doğrusal interpolasyon
-- `t=0.5` → eşit ağırlık (alternatifler: 0.3, 0.7)
-- En basit ve tutarlı yöntem
-
-### TIES (TrIm, Elect, Sum)
-- **3 model** birleştirme, base model üzerinden task vector hesabı
-- Gereksiz parametreleri budayarak (trim) temiz birleştirme
-- `weights=[0.5, 0.3, 0.2]`, `density=0.7`
-
-### DARE (Drop And REscale)
-- **3 model** birleştirme, TIES sign election ile birlikte
-- Rastgele parametreleri düşürüp (drop) yeniden ölçekleme (rescale)
-- `weights=[0.4, 0.35, 0.25]`, `density=0.5`
-
-## 📊 Benchmark Sonuçları
-
-Sonuçlar `results/benchmark_results.json` dosyasında saklanır.
-
-| Model | Strateji | Perplexity ↓ | Manuel/20 | En İyi? |
-|-------|----------|:------------:|:---------:|:-------:|
-| SLERP | SLERP | _tbd_ | _tbd_ | |
-| TIES | TIES | _tbd_ | _tbd_ | |
-| DARE | DARE | _tbd_ | _tbd_ | |
-| Baseline | — | _tbd_ | _tbd_ | |
-
-> Benchmark'ları çalıştırdıktan sonra bu tablo güncellenecektir.
+---
 
 ## ⚙️ Gereksinimler
 
 - Python 3.10+
 - CUDA destekli GPU (Colab T4 yeterli)
-- ~40 GB disk alanı (model indirmeleri için)
-- HuggingFace hesabı ve token (push için)
-
-## 📜 Lisans
-
-Bu proje MIT lisansı ile lisanslanmıştır. Merge edilen modeller kendi lisanslarına tabidir (Llama 3 License).
-
-## 🤝 Katkıda Bulunma
-
-1. Fork edin
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit edin (`git commit -m 'Add amazing feature'`)
-4. Push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
-
-## 📬 İletişim
-
-- **Linkedln:** [Cengizhan Bayram](https://www.linkedin.com/in/cengizhan-bayram)
-- **HuggingFace:** [Cosmobillian](https://huggingface.co/Cosmobillian)
+- ~40 GB disk alanı
+- HuggingFace hesabı ve write token
 
 ---
 
-> Merged from Turkish open-source LLMs using SLERP, TIES, and DARE strategies.
-> Benchmarks and methodology: [github.com/CengizhanBayram/experiment_of_merging](https://github.com/CengizhanBayram/experiment_of_merging)
+## 📬 İletişim
+
+- **LinkedIn:** [Cengizhan Bayram](https://www.linkedin.com/in/cengizhan-bayram)
+- **HuggingFace:** [Cosmobillian](https://huggingface.co/Cosmobillian)
+- **GitHub:** [CengizhanBayram](https://github.com/CengizhanBayram)
+
+---
+
+## 📜 Lisans
+
+MIT License. Merge edilen modeller kendi lisanslarına tabidir (Llama 3 License).
